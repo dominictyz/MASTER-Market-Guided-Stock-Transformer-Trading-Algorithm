@@ -32,7 +32,7 @@ class SymbolData:
         # Trim to keep memory bounded — we only ever need max_window + a
         # small buffer of history.
         if len(self.closes) > self.max_window + 10:
-            self.closes = self.closes[-(self.max_window + 10):]
+            self.closes = self.closes[-(self.max_window + 10) :]
 
     def is_ready(self, n):
         return len(self.closes) >= n
@@ -55,7 +55,7 @@ class SymbolData:
         """
         if len(self.closes) < n + 1:
             return None
-        prices = self.closes[-(n + 1):]
+        prices = self.closes[-(n + 1) :]
         rets = [np.log(prices[i] / prices[i - 1]) for i in range(1, len(prices))]
         if len(rets) < 2:
             return None
@@ -66,13 +66,14 @@ class SymbolData:
         """Daily log-return series of length n — used for correlation, not scoring."""
         if len(self.closes) < n + 1:
             return None
-        prices = self.closes[-(n + 1):]
+        prices = self.closes[-(n + 1) :]
         rets = [np.log(prices[i] / prices[i - 1]) for i in range(1, len(prices))]
         return np.array(rets)
 
 
-def compute_stock_score(sd: SymbolData, lookback_short: int, lookback_mid: int,
-                         lookback_long: int, factor_weights: dict):
+def compute_stock_score(
+    sd: SymbolData, lookback_short: int, lookback_mid: int, lookback_long: int, factor_weights: dict
+):
     """
     Combine short/mid/long momentum and a short-term mean-reversion signal
     into one composite score for a stock, using whatever factor weights
@@ -105,10 +106,10 @@ def compute_stock_score(sd: SymbolData, lookback_short: int, lookback_mid: int,
         rev_signal = -ret_short / vol  # mean-reversion: fade a recent short-term move
 
         score = (
-            factor_weights["w_short"] * sharpe_short +
-            factor_weights["w_mid"] * sharpe_mid +
-            factor_weights["w_long"] * sharpe_long +
-            factor_weights["w_rev"] * rev_signal
+            factor_weights["w_short"] * sharpe_short
+            + factor_weights["w_mid"] * sharpe_mid
+            + factor_weights["w_long"] * sharpe_long
+            + factor_weights["w_rev"] * rev_signal
         )
         return float(score)
 

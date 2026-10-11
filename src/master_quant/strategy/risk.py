@@ -36,7 +36,10 @@ def apply_drawdown_cut(exposure: float, current_equity: float, equity_peak: floa
     if equity_peak <= 0:
         return exposure, 0.0
 
-    drawdown = 1.0 - (current_equity / equity_peak)
+    # Computed as (peak - equity) / peak rather than 1 - equity / peak: the
+    # latter suffers floating-point error (1 - 85_000/100_000 evaluates to
+    # 0.15000000000000002), which would fire the breaker exactly AT the trigger.
+    drawdown = (equity_peak - current_equity) / equity_peak
     if drawdown > cfg.dd_trigger:
         exposure = exposure * cfg.dd_cut
 

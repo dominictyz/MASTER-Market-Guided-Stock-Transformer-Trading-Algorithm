@@ -10,22 +10,28 @@ any scoring happens. Two-stage QuantConnect filter:
   fine_filter   — more detailed check (common stock only — excludes ETFs,
                   REITs, preferred shares, etc.) run on the smaller
                   coarse-filtered list
+
+Both functions only read attributes off the objects passed in, so they can
+be unit tested with simple stand-in objects instead of QuantConnect types.
 """
 
+from collections.abc import Iterable
+from typing import Any
 
-def coarse_filter(coarse, cfg):
+COMMON_STOCK_TYPE = "ST00000001"  # Morningstar security-type code for common stock
+
+
+def coarse_filter(coarse: Iterable[Any], cfg: Any) -> list[Any]:
     filtered = [
-        c for c in coarse
+        c
+        for c in coarse
         if c.HasFundamentalData
-        and c.Price > 5
-        and c.DollarVolume > 5_000_000
+        and c.Price > cfg.min_price
+        and c.DollarVolume > cfg.min_dollar_volume
     ]
     sorted_by_vol = sorted(filtered, key=lambda c: c.DollarVolume, reverse=True)
-    return [c.Symbol for c in sorted_by_vol[:cfg.universe_size]]
+    return [c.Symbol for c in sorted_by_vol[: cfg.universe_size]]
 
 
-def fine_filter(fine):
-    return [
-        f.Symbol for f in fine
-        if f.SecurityReference.SecurityType == "ST00000001"  # common stock
-    ]
+def fine_filter(fine: Iterable[Any]) -> list[Any]:
+    return [f.Symbol for f in fine if f.SecurityReference.SecurityType == COMMON_STOCK_TYPE]

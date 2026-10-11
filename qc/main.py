@@ -7,25 +7,29 @@ scheduling and order execution, and delegates every actual decision
 in this package. That separation is what makes each piece independently
 testable and independently swappable.
 
-Upload this whole `src/` folder (plus `config/`) as a QuantConnect Cloud
-project; QC's multi-file Python projects support local imports exactly
-like this.
+To run on QuantConnect Cloud, upload this file as the project's main.py
+and upload the `src/master_quant/` folder alongside it (so the project
+contains `main.py` and `master_quant/`). QC multi-file Python projects
+support local package imports exactly like this.
 """
 
-from AlgorithmImports import *
 import numpy as np
+from AlgorithmImports import *
 from scipy.stats import zscore
 
-from config.strategy_config import StrategyConfig
-from src.scoring import SymbolData, compute_stock_score
-from src.regime import compute_market_gating
-from src.portfolio import correlation_diversify, apply_turnover_band, inverse_vol_weights
-from src.risk import regime_exposure_for, apply_drawdown_cut, update_equity_peak
-from src.universe import coarse_filter, fine_filter
+from master_quant.config import StrategyConfig
+from master_quant.strategy.portfolio import (
+    apply_turnover_band,
+    correlation_diversify,
+    inverse_vol_weights,
+)
+from master_quant.strategy.regime import compute_market_gating
+from master_quant.strategy.risk import apply_drawdown_cut, regime_exposure_for, update_equity_peak
+from master_quant.strategy.scoring import SymbolData, compute_stock_score
+from master_quant.strategy.universe import coarse_filter, fine_filter
 
 
 class MASTERStrategy(QCAlgorithm):
-
     def Initialize(self):
         self.cfg = StrategyConfig()
 
@@ -47,7 +51,7 @@ class MASTERStrategy(QCAlgorithm):
         )
 
         # ── State ────────────────────────────────────────────────────────
-        self.symbol_data = {}          # symbol -> SymbolData
+        self.symbol_data = {}  # symbol -> SymbolData
         self.day_counter = 0
         self.last_rebal = -999
         self.current_holdings = set()  # for the turnover band
@@ -116,7 +120,8 @@ class MASTERStrategy(QCAlgorithm):
 
         # ── Steps 2-4: score every ready stock ──────────────────────────
         ready_syms = [
-            sym for sym, sd in self.symbol_data.items()
+            sym
+            for sym, sd in self.symbol_data.items()
             if sd.is_ready(self.cfg.min_history) and data.Bars.ContainsKey(sym)
         ]
         if len(ready_syms) < 10:
@@ -133,7 +138,9 @@ class MASTERStrategy(QCAlgorithm):
         for sym in ready_syms:
             score = compute_stock_score(
                 self.symbol_data[sym],
-                self.cfg.lookback_short, self.cfg.lookback_mid, self.cfg.lookback_long,
+                self.cfg.lookback_short,
+                self.cfg.lookback_mid,
+                self.cfg.lookback_long,
                 market_weights,
             )
             if score is not None:
@@ -154,8 +161,11 @@ class MASTERStrategy(QCAlgorithm):
             ranked, returns_matrix, self.cfg.portfolio_size, self.cfg.corr_threshold
         )
         selected = apply_turnover_band(
-            self.current_holdings, candidates, scores,
-            self.cfg.portfolio_size, self.cfg.min_score_edge,
+            self.current_holdings,
+            candidates,
+            scores,
+            self.cfg.portfolio_size,
+            self.cfg.min_score_edge,
         )
 
         # ── Risk sizing: regime exposure, then drawdown circuit breaker ─
@@ -166,9 +176,7 @@ class MASTERStrategy(QCAlgorithm):
         )
 
         # ── Position sizing: inverse-volatility weights within exposure ─
-        weights = inverse_vol_weights(
-            selected, self.symbol_data, self.cfg.lookback_mid, exposure
-        )
+        weights = inverse_vol_weights(selected, self.symbol_data, self.cfg.lookback_mid, exposure)
 
         # ── Execute trades ────────────────────────────────────────────
         existing = set(self.Portfolio.Keys)
