@@ -36,5 +36,4 @@ weighting, and both risk-cut mechanisms.
 # Backtest
 
 Upload `src/`, `config/`, and `requirements.txt` as a QuantConnect Cloud
-project and run a backtest from the QC IDE. 
-
+project and run a backtest from the QC IDE.
