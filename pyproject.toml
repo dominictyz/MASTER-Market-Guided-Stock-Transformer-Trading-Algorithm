@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "master-quant"
+version = "0.1.0"
+description = "Market-Guided Stock Transformer (MASTER) research and trading framework for S&P 500 equities"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Dominic Tham" }]
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "hypothesis>=6.90",
+    "ruff==0.6.9",
+    "mypy>=1.8",
+    "pre-commit>=3.5",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ── pytest ───────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --cov=master_quant --cov-report=term-missing --cov-fail-under=85"
+
+# ── coverage ─────────────────────────────────────────────────────────────
+[tool.coverage.run]
+branch = true
+source = ["master_quant"]
+
+# ── ruff (linter + formatter) ────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# QuantConnect injects its API via a star import and uses PascalCase methods.
+"qc/main.py" = ["F403", "F405", "N802", "N803", "N806"]
+
+# ── mypy ─────────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = true
+files = ["src"]

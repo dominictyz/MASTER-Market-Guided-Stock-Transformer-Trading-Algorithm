@@ -15,17 +15,15 @@ any scoring happens. Two-stage QuantConnect filter:
 
 def coarse_filter(coarse, cfg):
     filtered = [
-        c for c in coarse
-        if c.HasFundamentalData
-        and c.Price > 5
-        and c.DollarVolume > 5_000_000
+        c for c in coarse if c.HasFundamentalData and c.Price > 5 and c.DollarVolume > 5_000_000
     ]
     sorted_by_vol = sorted(filtered, key=lambda c: c.DollarVolume, reverse=True)
-    return [c.Symbol for c in sorted_by_vol[:cfg.universe_size]]
+    return [c.Symbol for c in sorted_by_vol[: cfg.universe_size]]
 
 
 def fine_filter(fine):
     return [
-        f.Symbol for f in fine
+        f.Symbol
+        for f in fine
         if f.SecurityReference.SecurityType == "ST00000001"  # common stock
     ]

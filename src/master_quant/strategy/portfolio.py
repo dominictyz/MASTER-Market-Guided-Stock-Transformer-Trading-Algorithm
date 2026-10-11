@@ -75,8 +75,9 @@ def correlation_diversify(ranked_scores, returns_matrix, n, corr_threshold=0.75)
     return selected
 
 
-def apply_turnover_band(current_holdings, candidate_selection, scores,
-                         portfolio_size, min_score_edge=0.15):
+def apply_turnover_band(
+    current_holdings, candidate_selection, scores, portfolio_size, min_score_edge=0.15
+):
     """
     Every rebalance, a fresh ranking will always look at least a little
     different from the last one — some of that difference is real
@@ -139,7 +140,4 @@ def inverse_vol_weights(selected, symbol_data_map, lookback_mid, total_exposure)
         n = len(selected)
         return {sym: total_exposure / n for sym in selected} if n > 0 else {}
 
-    return {
-        sym: total_exposure * (iv / total_inv_vol)
-        for sym, iv in inv_vols.items()
-    }
+    return {sym: total_exposure * (iv / total_inv_vol) for sym, iv in inv_vols.items()}
